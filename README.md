@@ -5,13 +5,18 @@
 ## Prerequisites
 ### Linux (Debian 12)
 
-`sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server supervisor pkg-config mariadb-server python3-venv`
+```text
+sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server supervisor pkg-config mariadb-server python3-venv
+```
 
 ### Configure MariaDB
 
-`sudo mariadb-secure-installation`
-
-`sudo mariadb`
+```text
+sudo mariadb-secure-installation
+```
+```text
+sudo mariadb
+```
 
 ```text
 CREATE DATABASE IF NOT EXISTS explorer CHARACTER SET utf8;
@@ -39,33 +44,52 @@ In file `node.properties`:
 
 ### Install Django and configure DB
 
-`python3 -m venv venv`
+```text
+python3 -m venv venv
+```
 
-`. venv/bin/activate`
+```text
+. venv/bin/activate
+```
 
-`pip install -U pip`
+```text
+pip install -U pip
+```
 
-`pip install -r requirements.txt`
+```text
+pip install -r requirements.txt
+```
 
-`cp .env.example .env`
+```text
+cp .env.example .env
+```
 
-`find . -path -maxdepth 3 "*/migrations/*.py" -not -name "__init__.py" -delete`
+```text
+find . -maxdepth 3 -path "*/migrations/*.py" -not -name "__init__.py" -delete
 
-`find . -path -maxdepth 3 "*/migrations/*.pyc"  -delete`
+find . -maxdepth 3 -path "*/migrations/*.pyc"  -delete
 
-`python manage.py makemigrations`
+python manage.py makemigrations
+```
+```text
+python manage.py migrate
+```
 
-`python manage.py migrate`
-
-`gunicorn config.wsgi -c gunicorn.conf.py`
+```text
+gunicorn config.wsgi -c gunicorn.conf.py
+```
 
 For update SIGNA PRICE:
 
-`python3 manage.py tasks`
+```text
+python3 manage.py tasks
+```
 
 For update PEERS:
 
-`python3 manage.py peers`
+```text
+python3 manage.py peers
+```
 
 NOTE:
 
