@@ -1,5 +1,61 @@
 # Signum Explorer
 
+`sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server supervisor pkg-config mariadb-server python3-venv`
+
+`sudo mariadb-secure-installation`
+
+`sudo mariadb`
+
+`CREATE DATABASE IF NOT EXISTS explorer CHARACTER SET utf8;`
+
+`CREATE USER IF NOT EXISTS 'explorer'@'localhost' IDENTIFIED BY 'ByjTFyabRJqAfg963KPx';`
+
+`GRANT ALL PRIVILEGES ON explorer.* TO 'explorer'@'localhost';`
+
+`CREATE DATABASE IF NOT EXISTS java_wallet CHARACTER SET utf8;`
+
+`CREATE USER IF NOT EXISTS 'java_wallet'@'localhost' IDENTIFIED BY 'tE2CIhuv7Dowt49RI1zG';`
+
+`GRANT ALL PRIVILEGES ON java_wallet.* TO 'java_wallet'@'localhost';`
+
+`FLUSH PRIVILEGES;`
+
+`QUIT;`
+
+`python3 -m venv venv`
+
+`. venv/bin/activate`
+
+`pip install -U pip`
+
+`pip install -r requirements.txt`
+
+`cp .env.example .env`
+
+`find . -path -maxdepth 3 "*/migrations/*.py" -not -name "__init__.py" -delete`
+
+`find . -path -maxdepth 3 "*/migrations/*.pyc"  -delete`
+
+`python manage.py makemigrations`
+
+`python manage.py migrate`
+
+`python manage.py migrate --database=java_wallet`
+
+`gunicorn config.wsgi -c gunicorn.conf.py`
+
+For update SIGNA PRICE:
+
+`python3 manage.py tasks`
+
+For update PEERS:
+
+`python3 manage.py peers`
+
+NOTE:
+
+DB "java_wallet" is node DB
+
 This documentation is a work in progress. More details to follow.
 <br>
 <br>
