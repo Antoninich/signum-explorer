@@ -1,26 +1,43 @@
 # Signum Explorer
 
+# Installation
+
+## Prerequisites
+### Linux (Debian 12)
+
 `sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server supervisor pkg-config mariadb-server python3-venv`
+
+### Configure MariaDB
 
 `sudo mariadb-secure-installation`
 
 `sudo mariadb`
 
-`CREATE DATABASE IF NOT EXISTS explorer CHARACTER SET utf8;`
+```text
+CREATE DATABASE IF NOT EXISTS explorer CHARACTER SET utf8;
+CREATE USER IF NOT EXISTS 'explorer'@'localhost' IDENTIFIED BY 'ByjTFyabRJqAfg963KPx';
+GRANT ALL PRIVILEGES ON explorer.* TO 'explorer'@'localhost';
 
-`CREATE USER IF NOT EXISTS 'explorer'@'localhost' IDENTIFIED BY 'ByjTFyabRJqAfg963KPx';`
+CREATE DATABASE IF NOT EXISTS signum CHARACTER SET utf8;
+CREATE USER IF NOT EXISTS 'signum_user'@'localhost' IDENTIFIED BY 'tE2CIhuv7Dowt49RI1zG';
+GRANT ALL PRIVILEGES ON signum.* TO 'signum_user'@'localhost';
 
-`GRANT ALL PRIVILEGES ON explorer.* TO 'explorer'@'localhost';`
+FLUSH PRIVILEGES;
+QUIT;
+```
 
-`CREATE DATABASE IF NOT EXISTS java_wallet CHARACTER SET utf8;`
+### INSTALL SIGNUM NODE:
 
-`CREATE USER IF NOT EXISTS 'java_wallet'@'localhost' IDENTIFIED BY 'tE2CIhuv7Dowt49RI1zG';`
+https://github.com/signum-network/signum-node#installation
 
-`GRANT ALL PRIVILEGES ON java_wallet.* TO 'java_wallet'@'localhost';`
+In file `node.properties`:
+```properties
+ DB.Url=jdbc:mariadb://localhost:3306/signum
+ DB.Username=signum_user
+ DB.Password=tE2CIhuv7Dowt49RI1zG
+```
 
-`FLUSH PRIVILEGES;`
-
-`QUIT;`
+### Install Django and configure DB
 
 `python3 -m venv venv`
 
@@ -39,8 +56,6 @@
 `python manage.py makemigrations`
 
 `python manage.py migrate`
-
-`python manage.py migrate --database=java_wallet`
 
 `gunicorn config.wsgi -c gunicorn.conf.py`
 
