@@ -135,7 +135,7 @@ DATABASES = {
     },
 }
 
-DATABASE_ROUTERS = ["java_wallet.db_router.DBRouter", "scan.db_router.DBRouter"]
+DATABASE_ROUTERS = ["java_wallet.db_router.JavaWalletDBRouter"]
 
 
 # Password validation

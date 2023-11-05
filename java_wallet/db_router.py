@@ -1,27 +1,29 @@
-class DBRouter:
-    @staticmethod
-    def db_for_read(model, **hints):
-        if model._meta.app_label == "java_wallet":
-            return "java_wallet"
+class JavaWalletDBRouter:
+
+    route_app_labels = {"java_wallet"}
+    route_db = "java_wallet"
+
+    def db_for_read(self, model, **hints):
+        if model._meta.app_label in self.route_app_labels:
+            return model._meta.app_label
         return None
 
-    @staticmethod
-    def db_for_write(model, **hints):
-        if model._meta.app_label == "java_wallet":
-            return "java_wallet"
+    def db_for_write(self, model, **hints):
+        if model._meta.app_label in self.route_app_labels:
+            return model._meta.app_label
         return None
 
-    @staticmethod
-    def allow_relation(obj1, obj2, **hints):
+    def allow_relation(self, obj1, obj2, **hints):
         if (
-            obj1._meta.app_label == "java_wallet"
-            or obj2._meta.app_label == "java_wallet"
+            obj1._meta.app_label in self.route_app_labels or
+            obj2._meta.app_label in self.route_app_labels
         ):
             return True
         return None
 
-    @staticmethod
-    def allow_migrate(db, app_label, model_name=None, **hints):
-        if app_label == "java_wallet":
-            return db == "java_wallet"
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        if app_label in self.route_app_labels:
+            return db == app_label
+        elif db == self.route_db:
+            return False
         return None

@@ -1,8 +1,3 @@
-# other required packages, manually install using apt. tested with redis-server v7 and python 3.10
-# apt install python3-dev default-libmysqlclient-dev build-essential redis-server supervisor
-
-# required packages  to use 'pip install -r requirements.txt'
-python
 django
 django-cache-memoize
 django-cors-headers
@@ -18,7 +13,4 @@ simplejson
 supervisor
 whitenoise
 python-dotenv
-
-# required packages specific versions
-# minimum version of pycoingecko needed
 pycoingecko==3.1.0
