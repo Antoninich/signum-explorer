@@ -32,6 +32,7 @@ Total: {{ paginator.count|intcomma }}
             <tr>
               <th scope="col">Pool</th>
               <th scope="col">Name</th>
+              <th scope="col">Last forged block</th>
             </tr>
             </thead>
             <tbody>
@@ -39,6 +40,7 @@ Total: {{ paginator.count|intcomma }}
               <tr>
                 <td><a href="{% url 'pool-detail' pool.recip_id %}">{{ pool.recip_id|num2rs }}</a></td>
                 <td style="word-wrap: break-word; max-width: 250px">{{ pool.recip_id|account_name_string }}</td>
+                <td><a href="{% url 'block-detail' pool.block %}">{{ pool.block }}</a></td>
               </tr>
             {% endfor %}
             </tbody>

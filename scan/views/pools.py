@@ -1,7 +1,13 @@
-from django.db.models import F, Q
+from django.db.models import F, OuterRef, Q, Subquery
 from django.views.generic import ListView
 
-from java_wallet.models import Account, IndirectIncoming, RewardRecipAssign, Transaction
+from java_wallet.models import (
+    Account,
+    Block,
+    IndirectIncoming,
+    RewardRecipAssign,
+    Transaction,
+)
 from scan.caching_paginator import CachingPaginator
 from scan.helpers.queries import get_account_name
 from scan.views.base import IntSlugDetailView
@@ -9,18 +15,35 @@ from scan.views.transactions import fill_data_transaction
 
 
 class PoolListView(ListView):
-    model = RewardRecipAssign
+    model = Block
+    query = (
+        Block.objects.using("java_wallet")
+        .annotate(pool_id=Subquery(
+            RewardRecipAssign.objects.using("java_wallet")
+            .filter(~Q(recip_id=F('account_id')))
+            .filter(account_id=OuterRef("generator_id"))
+            .values("recip_id")[:1]
+        ))
+        .exclude(pool_id__isnull=True)
+        .values("height")
+        .filter(pool_id=OuterRef("recip_id"))
+        .order_by("-height")
+        .exclude(height__isnull=True)
+        .filter(height__gt=1200000)
+    )
     queryset = (
         RewardRecipAssign.objects.using("java_wallet")
         .filter(latest=1).filter(~Q(recip_id=F('account_id')))
-        .values('recip_id')
+        .annotate(block=query[:1])
+        .values("recip_id", "block")
         .distinct()
+        .exclude(block__isnull=True)
     )
     template_name = "pools/list.html"
     context_object_name = "pools"
     paginator_class = CachingPaginator
     paginate_by = 25
-    ordering = "recip_id"
+    ordering = "-block"
 
 
 class PoolDetailView(IntSlugDetailView):
