@@ -1,4 +1,4 @@
-from django.db.models import F, OuterRef, Q, Subquery
+from django.db.models import F, OuterRef, Q
 from django.views.generic import ListView
 
 from java_wallet.models import (
@@ -15,35 +15,52 @@ from scan.views.transactions import fill_data_transaction
 
 
 class PoolListView(ListView):
-    model = Block
-    query = (
-        Block.objects.using("java_wallet")
-        .annotate(pool_id=Subquery(
-            RewardRecipAssign.objects.using("java_wallet")
-            .filter(~Q(recip_id=F('account_id')))
-            .filter(account_id=OuterRef("generator_id"))
-            .values("recip_id")[:1]
-        ))
-        .exclude(pool_id__isnull=True)
-        .values("height")
-        .filter(pool_id=OuterRef("recip_id"))
-        .order_by("-height")
-        .exclude(height__isnull=True)
-        .filter(height__gt=1200000)
-    )
+    model = RewardRecipAssign
     queryset = (
         RewardRecipAssign.objects.using("java_wallet")
-        .filter(latest=1).filter(~Q(recip_id=F('account_id')))
-        .annotate(block=query[:1])
-        .values("recip_id", "block")
-        .distinct()
-        .exclude(block__isnull=True)
+        .filter(~Q(recip_id=F('account_id')))
+        .values("recip_id", "account_id")
     )
     template_name = "pools/list.html"
     context_object_name = "pools"
     paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-block"
+
+    def get_queryset(self):
+        qs = self.queryset
+        query_block = (
+            Block.objects.using("java_wallet")
+            .values("generator_id", "height")
+            .all()
+        )
+        query_forged_block_and_pool_id = (
+            query_block
+            .annotate(
+                pool_id=qs
+                .filter(height__lte=OuterRef("height"))
+                .filter(account_id=OuterRef("generator_id"))
+                .order_by("-height")
+                .values("recip_id")
+                [:1]
+            )
+            .order_by("-height")
+            .values("pool_id", "height")
+            .exclude(height__isnull=True)
+            .exclude(pool_id__isnull=True)
+        )
+
+        pool_s_last_forged_blocks = []
+        pools_list = []
+        for query in query_forged_block_and_pool_id:
+            if query["pool_id"] not in pools_list:
+                pool_s_last_forged_blocks.append(query["height"])
+                pools_list.append(query["pool_id"])
+
+        return (
+            query_forged_block_and_pool_id
+            .filter(height__in=pool_s_last_forged_blocks)
+        )
 
 
 class PoolDetailView(IntSlugDetailView):
