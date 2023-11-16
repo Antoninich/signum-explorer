@@ -44,7 +44,6 @@ class PoolListView(ListView):
         query_block = (
             Block.objects.using("java_wallet")
             .values("generator_id", "height")
-            .all()
         )
         query_from_query_block = (
             query_block
@@ -74,6 +73,7 @@ class PoolListView(ListView):
             .values("recip_id", "block")
             .exclude(block__isnull=True)
             .exclude(recip_id__isnull=True)
+            .filter(latest=1)
         )
 
         pool_s_last_forged_blocks = []
