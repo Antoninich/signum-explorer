@@ -10,6 +10,9 @@ sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-se
 ```
 
 ### Configure MariaDB
+Creating databases for signum explorer and signum node. For the "node" database, we create two users: with one user "node_user" and with one read-only user "node_read only_user". "node_user" will be used in the signum node, and "node_read only_user" will be used in the signum explorer.
+
+Replace "explorer_user password", 'node_user password' and 'node_readonly_user password' with their own values.
 
 ```text
 sudo mariadb-secure-installation
@@ -20,12 +23,14 @@ sudo mariadb
 
 ```text
 CREATE DATABASE IF NOT EXISTS explorer CHARACTER SET utf8;
-CREATE USER IF NOT EXISTS 'explorer'@'localhost' IDENTIFIED BY 'ByjTFyabRJqAfg963KPx';
-GRANT ALL PRIVILEGES ON explorer.* TO 'explorer'@'localhost';
+CREATE USER IF NOT EXISTS 'explorer_user'@'localhost' IDENTIFIED BY 'explorer_user password';
+GRANT ALL PRIVILEGES ON explorer.* TO 'explorer_user'@'localhost';
 
-CREATE DATABASE IF NOT EXISTS signum CHARACTER SET utf8;
-CREATE USER IF NOT EXISTS 'signum_user'@'localhost' IDENTIFIED BY 'tE2CIhuv7Dowt49RI1zG';
-GRANT ALL PRIVILEGES ON signum.* TO 'signum_user'@'localhost';
+CREATE DATABASE IF NOT EXISTS node CHARACTER SET utf8;
+CREATE USER IF NOT EXISTS 'node_user'@'localhost' IDENTIFIED BY 'node_user password';
+CREATE USER IF NOT EXISTS 'node_readonly_user'@'localhost' IDENTIFIED BY 'node_readonly_user password';
+GRANT ALL PRIVILEGES ON signum.* TO 'node_user'@'localhost';
+GRANT SELECT ON signum.* TO 'node_readonly_user'@'localhost';
 
 FLUSH PRIVILEGES;
 QUIT;
@@ -37,9 +42,10 @@ https://github.com/signum-network/signum-node#installation
 
 In file `node.properties`:
 ```properties
- DB.Url=jdbc:mariadb://localhost:3306/signum
- DB.Username=signum_user
- DB.Password=tE2CIhuv7Dowt49RI1zG
+ DB.Url=jdbc:mariadb://localhost:3306/node
+ DB.Username=node_user
+ DB.Password="node_user password"
+ DB.trimDerivedTables=false
 ```
 
 ### Install Django and configure DB
