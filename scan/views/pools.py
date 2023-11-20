@@ -1,3 +1,4 @@
+import pandas as pd
 from django.db.models import F, OuterRef, Q
 from django.views.generic import ListView
 
@@ -19,19 +20,30 @@ from scan.helpers.queries import (
 from scan.views.base import IntSlugDetailView
 from scan.views.transactions import fill_data_transaction
 
+BLOCKS_OF_HALFYEAR = 65700
+
 
 def fill_data_pool(pool):
     pool["url"] = get_description_url(pool["pool_id"])
     pool["miners_cnt"] = get_count_of_miners(pool["pool_id"])
-    pool["block_timestamp"] = get_timestamp_of_block(pool["height"])
+    pool["block_timestamp"] = get_timestamp_of_block(pool["block"])
 
 
 class PoolListView(ListView):
-    model = RewardRecipAssign
+    model = Block
     queryset = (
-        RewardRecipAssign.objects.using("java_wallet")
-        .filter(~Q(recip_id=F('account_id')))
-        .values("recip_id", "account_id")
+        Block.objects.using("java_wallet")
+        .annotate(block=F("height"))
+        .annotate(
+            pool_id=RewardRecipAssign.objects.using("java_wallet")
+            .filter(height__lte=OuterRef("height"))
+            .filter(account_id=OuterRef("generator_id"))
+            .order_by("-height")
+            .values("recip_id")
+            [:1]
+        )
+        .values("block", "pool_id")
+        .filter(~Q(pool_id=F('generator_id')))
     )
     template_name = "pools/list.html"
     context_object_name = "pools"
@@ -40,53 +52,20 @@ class PoolListView(ListView):
     ordering = "-block"
 
     def get_queryset(self):
-        qs = self.queryset
-        query_block = (
+        last_block = (
             Block.objects.using("java_wallet")
-            .values("generator_id", "height")
-        )
-        query_from_query_block = (
-            query_block
-            .annotate(
-                pool_id=qs
-                .filter(height__lte=OuterRef("height"))
-                .filter(account_id=OuterRef("generator_id"))
-                .order_by("-height")
-                .values("recip_id")
-                [:1]
-            )
+            .values_list("height", flat=True)
             .order_by("-height")
-            .values("pool_id", "height")
-            .exclude(height__isnull=True)
-            .exclude(pool_id__isnull=True)
+            .first()
         )
-        query_from_queryset = (
-            qs
-            .annotate(
-                block=query_block
-                .filter(generator_id=OuterRef("account_id"))
-                .order_by("-height")
-                .values("height")
-                [:1]
-            )
-            .order_by("-block")
-            .values("recip_id", "block")
-            .exclude(block__isnull=True)
-            .exclude(recip_id__isnull=True)
-            .filter(latest=1)
-        )
-
+        since_block = last_block - BLOCKS_OF_HALFYEAR
+        qs = self.queryset.filter(block__gte=since_block).order_by("-block")
+        qs_data = pd.DataFrame.from_records(qs)
+        data = qs_data.groupby('pool_id').first().sort_values(by='block', ascending=False)
         pool_s_last_forged_blocks = []
-        pools_list = []
-        for query in query_from_queryset:
-            if query["recip_id"] not in pools_list:
-                pool_s_last_forged_blocks.append(query["block"])
-                pools_list.append(query["recip_id"])
-
-        return (
-            query_from_query_block
-            .filter(height__in=pool_s_last_forged_blocks)
-        )
+        for index, row in data.iterrows():
+            pool_s_last_forged_blocks.append(row["block"])
+        return qs.filter(block__in=pool_s_last_forged_blocks).order_by(self.ordering)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -94,7 +73,6 @@ class PoolListView(ListView):
 
         for pool in obj:
             fill_data_pool(pool)
-
         return context
 
 
