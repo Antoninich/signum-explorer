@@ -3,14 +3,14 @@
 {% load humanize %}
 {% load burst_tags %}
 
-{% block title %} - Pools{% endblock %}
+{% block title %} - Pools (since {{ SINCE_BLOCK }} block){% endblock %}
 {% block description %}
 Signum Pools
 Total: {{ paginator.count|intcomma }}
 {% endblock %}
 {% block content %}
 
-  <h5 class="p-2">Pools
+  <h5 class="p-2">Pools (since {{ SINCE_BLOCK }} block)
     {% if 'a' in request.GET %}
     <br class="d-md-none" />
     <small class="text-muted">for address <a href="{% url 'address-detail' request.GET.a %}">{{ request.GET.a|num2rs }}</a></small>
@@ -40,7 +40,7 @@ Total: {{ paginator.count|intcomma }}
             <tbody>
             {% for pool in pools %}
               <tr>
-                <td><a href="{% url 'block-detail' pool.height %}">{{ pool.height }}</a></td>
+                <td><a href="{% url 'block-detail' pool.block %}">{{ pool.block }}</a></td>
                 <td class="text-nowrap">{{ pool.block_timestamp|naturaltime }}</td>
                 <td class="d-none d-sm-table-cell"><a href="{% url 'pool-detail' pool.pool_id %}">{{ pool.pool_id|num2rs }}</a></td>
                 {% if pool.url %}
