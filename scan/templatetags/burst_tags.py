@@ -94,11 +94,11 @@ def cashback_amount(value: int) -> float:
 
 @register.filter
 def append_symbol(value: float) -> str:
-    return value + " " + os.environ.get("COIN_SYMBOL")
+    return value + " " + os.environ.get("COIN_SYMBOL", "SIGNA")
 
 @register.simple_tag()
 def coin_symbol() -> str:
-    return os.environ.get("COIN_SYMBOL")
+    return os.environ.get("COIN_SYMBOL", "SIGNA")
 
 @register.filter
 def split(str, key):
@@ -507,7 +507,7 @@ def tx_load_recipients(tx: Transaction) -> Transaction:
 
 @register.filter
 def num2rs(value: str or int) -> str:
-    return os.environ.get("ADDRESS_PREFIX") + ReedSolomon().encode(str(value))
+    return os.environ.get("ADDRESS_PREFIX", "S-") + ReedSolomon().encode(str(value))
 
 @register.filter
 def subNextsend(value):

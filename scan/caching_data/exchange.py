@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ExchangeData:
-    price_usd: float = float(os.environ.get("COINGECKO_PRICE_USD"))
-    price_btc: float = float(os.environ.get("COINGECKO_PRICE_BTC"))
-    market_cap_usd: float = float(os.environ.get("COINGECKO_MKT_USD"))
+    price_usd: float = float(os.environ.get("COINGECKO_PRICE_USD", 0))
+    price_btc: float = float(os.environ.get("COINGECKO_PRICE_BTC", 0))
+    market_cap_usd: float = float(os.environ.get("COINGECKO_MKT_USD", 0))
     percent_change_24h: float = 0
 
 
@@ -42,7 +42,7 @@ class CachingExchangeData(CachingDataBase):
             logger.info("Getting Exchange data from API")
             cg = CoinGeckoAPI(retries=0)
             response = cg.get_price(
-                ids=os.environ.get("COINGECKO_PRICE_ID"),
+                ids=os.environ.get("COINGECKO_PRICE_ID", "signum"),
                 vs_currencies=["usd"],
                 include_market_cap="true",
                 include_24hr_change="true",
