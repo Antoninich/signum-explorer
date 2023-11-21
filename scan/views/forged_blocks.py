@@ -1,7 +1,6 @@
 from django.db.models import F, Q
 from django.views.generic import ListView
 
-from scan.caching_paginator import CachingPaginator
 from scan.helpers.queries import get_timestamp_of_block
 from scan.models import Pool
 
@@ -16,7 +15,6 @@ class ForgedBlocksListView(ListView):
     )
     template_name = "forged_blocks/list.html"
     context_object_name = "forged_blocks"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-block"
 

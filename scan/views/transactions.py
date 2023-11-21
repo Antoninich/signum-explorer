@@ -11,7 +11,6 @@ from burst.libs.multiout import MultiOutPack
 from java_wallet.models import IndirectIncoming, Transaction
 from scan.caching_data.last_height import CachingLastHeight
 from scan.caching_data.total_txs_count import CachingTotalTxsCount
-from scan.caching_paginator import CachingPaginator
 from scan.helpers.queries import get_account_name, get_unconfirmed_transactions
 from scan.views.base import IntSlugDetailView
 from scan.views.filters.transactions import TxFilter
@@ -34,7 +33,6 @@ class TxListView(ListView):
     queryset = Transaction.objects.using("java_wallet").all()
     template_name = "txs/list.html"
     context_object_name = "txs"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = ("-height", "-timestamp")
     filter_set = None

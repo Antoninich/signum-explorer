@@ -10,7 +10,6 @@ from java_wallet.models import (
     RewardRecipAssign,
     Transaction,
 )
-from scan.caching_paginator import CachingPaginator
 from scan.helpers.queries import (
     get_account_name,
     get_count_of_miners,
@@ -101,7 +100,6 @@ class PoolListView(ListView):
     )
     template_name = "pools/list.html"
     context_object_name = "pools"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-block"
 

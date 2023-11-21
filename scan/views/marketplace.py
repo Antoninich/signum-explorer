@@ -2,7 +2,6 @@ from django.http import Http404
 from django.views.generic import ListView
 
 from java_wallet.models import Goods, Purchase
-from scan.caching_paginator import CachingPaginator
 from scan.helpers.queries import get_account_name
 from scan.views.base import IntSlugDetailView
 from scan.views.filters.marketplace import MarketplaceFilter
@@ -13,7 +12,6 @@ class MarketPlaceListView(ListView):
     queryset = Goods.objects.using("java_wallet").filter(latest=True).all()
     template_name = "marketplace/list.html"
     context_object_name = "goods"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-height"
 
@@ -31,7 +29,6 @@ class MarketPlacePurchasesListView(ListView):
     queryset = Purchase.objects.using("java_wallet").all()
     template_name = "marketplace/purchases.html"
     context_object_name = "purchases"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-height"
     filter_set = None

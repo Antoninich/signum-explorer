@@ -2,7 +2,6 @@ from django.views.generic import ListView
 
 from java_wallet.models import Block
 from scan.caching_data.last_height import CachingLastHeight
-from scan.caching_paginator import CachingPaginator
 from scan.helpers.queries import (
     get_account_name,
     get_pool_id_for_block,
@@ -26,7 +25,6 @@ class BlockListView(ListView):
     queryset = Block.objects.using("java_wallet").all()
     template_name = "blocks/list.html"
     context_object_name = "blocks"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-height"
 

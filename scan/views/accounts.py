@@ -14,7 +14,6 @@ from java_wallet.models import (
     Trade,
     Transaction,
 )
-from scan.caching_paginator import CachingPaginator
 from scan.helpers.queries import (
     get_account_name,
     get_asset_details_owner,
@@ -36,7 +35,6 @@ class AccountsListView(ListView):
     )
     template_name = "accounts/list.html"
     context_object_name = "accounts"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-balance"
     def get_queryset(self):

@@ -8,7 +8,6 @@ from django.views.generic import ListView
 from config.settings import BLOCKED_ASSETS, PHISHING_ASSETS, FEATURED_ASSETS
 
 from java_wallet.models import AccountAsset, Asset, AssetTransfer, Trade,Transaction
-from scan.caching_paginator import CachingPaginator
 from scan.helpers.queries import get_account_name, get_asset_details, get_asset_details_owner
 from scan.templatetags.burst_tags import burst_amount, mul_decimals
 from scan.views.base import IntSlugDetailView
@@ -40,7 +39,6 @@ class AssetListView(ListView):
     queryset = Asset.objects.using("java_wallet").all()
     template_name = "assets/list.html"
     context_object_name = "assets"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-height"
 
@@ -73,7 +71,6 @@ class AssetTradesListView(ListView):
     queryset = Trade.objects.using("java_wallet").all()
     template_name = "assets/trades.html"
     context_object_name = "assets_trades"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-height"
     filter_set = None
@@ -103,7 +100,6 @@ class AssetTransfersListView(ListView):
     queryset = AssetTransfer.objects.using("java_wallet").all()
     template_name = "assets/transfers.html"
     context_object_name = "assets_transfers"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-height"
     filter_set = None
@@ -133,7 +129,6 @@ class AssetHoldersListView(ListView):
     queryset = AccountAsset.objects.using("java_wallet").filter(latest=True)
     template_name = "assets/holders.html"
     context_object_name = "assets_holders"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-quantity"
     filter_set = None
@@ -307,7 +302,6 @@ class AssetMintingDetailView(ListView):
     context_object_name = "asset"
     slug_field = "id"
     slug_url_kwarg = "id"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-height"
     filter_set = None
@@ -375,7 +369,6 @@ class AssetDistributionDetailView(ListView):
     queryset = Asset.objects.using("java_wallet").all()
     template_name = "assets/distributions.html"
     context_object_name = "asset"
-    paginator_class = CachingPaginator
     paginate_by = 25
     ordering = "-height"
     filter_set = None

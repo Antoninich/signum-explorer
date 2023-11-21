@@ -2,10 +2,8 @@ import gzip
 from django.views.generic import ListView
 
 from java_wallet.models import IndirectIncoming
-from scan.caching_paginator import CachingPaginator
 
 
-from scan.caching_paginator import CachingPaginator
 from scan.helpers.queries import  get_account_name, get_details_by_tx, get_single_tx_class
 
 
@@ -24,7 +22,6 @@ class DistributionListView(ListView):
     queryset = IndirectIncoming.objects.using("java_wallet").all().order_by("-amount","-quantity")
     template_name = "distribution/list.html"
     context_object_name = "distribution"
-    paginator_class = CachingPaginator
     paginate_by = 25
     # ordering = "-amount"
 
