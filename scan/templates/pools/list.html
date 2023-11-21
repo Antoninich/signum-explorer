@@ -22,7 +22,11 @@ Total: {{ paginator.count|intcomma }}
       <div class="card-body">
 
         <div class="d-flex flex-column flex-md-row align-items-center">
+          {% if paginator.count %}
           <small class="my-0 mr-md-auto text-muted">{{ paginator.count|intcomma }} Pools found</small>
+          {% else %}
+          <small class="my-0 mr-md-auto text-muted">Pools not found</small>
+          {% endif %}
           {% include "paginator.html" %}
         </div>
 
@@ -40,7 +44,7 @@ Total: {{ paginator.count|intcomma }}
             <tbody>
             {% for pool in pools %}
               <tr>
-                <td><a href="{% url 'block-detail' pool.height %}">{{ pool.height }}</a></td>
+                <td><a href="{% url 'block-detail' pool.block %}">{{ pool.block }}</a></td>
                 <td class="text-nowrap">{{ pool.block_timestamp|naturaltime }}</td>
                 <td class="d-none d-sm-table-cell"><a href="{% url 'pool-detail' pool.pool_id %}">{{ pool.pool_id|num2rs }}</a></td>
                 {% if pool.url %}

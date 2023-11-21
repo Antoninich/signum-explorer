@@ -15,6 +15,9 @@ import os
 
 import simplejson as json
 import urllib3
+from dotenv import load_dotenv
+
+load_dotenv()
 
 urllib3.disable_warnings()
 
@@ -221,17 +224,22 @@ LOGGING = {
 }
 
 # Celery
-#
-#CELERY_BROKER_URL = (
-#    f'redis://{os.environ.get("CELERY_BROKER_HOST")}:'
-#    f'{os.environ.get("CELERY_BROKER_PORT")}/'
-#    f'{os.environ.get("CELERY_BROKER_DB")}'
-#)
-#CELERY_RESULT_BACKEND = None
-#CELERY_ACCEPT_CONTENT = ["json"]
-#CELERY_TASK_SERIALIZER = "json"
-#CELERY_RESULT_SERIALIZER = "json"
-#CELERYD_TASK_TIME_LIMIT = 600
+
+CELERY_BROKER_URL = (
+   f'redis://{os.environ.get("CELERY_BROKER_HOST")}:'
+   f'{os.environ.get("CELERY_BROKER_PORT")}/'
+   f'{os.environ.get("CELERY_BROKER_DB")}'
+)
+CELERY_RESULT_BACKEND = (
+   f'redis://{os.environ.get("CELERY_RESULT_HOST")}:'
+   f'{os.environ.get("CELERY_RESULT_PORT")}/'
+   f'{os.environ.get("CELERY_RESULT_DB")}'
+)
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERYD_TASK_TIME_LIMIT = 600
+CELERY_TASK_TRACK_STARTED = True
 
 # Sentry
 

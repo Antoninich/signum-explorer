@@ -1,5 +1,6 @@
 import logging
 import os
+from celery import shared_task
 import requests, json
 
 from time import sleep
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 # saves the user from a slow initial #
 # page load.                         #
 ######################################
-
+@shared_task
 def task_cmd():
     if TASKS_SCAN_DELAY > 0:  # Delay in env used when supervisord is used.
         logger.info(f"Tasks Sleeping for {TASKS_SCAN_DELAY} seconds...")

@@ -15,6 +15,7 @@ from burst.constants import BLOCK_CHAIN_START_AT, TxSubtypeBurstMining, TxSubtyp
 from java_wallet.fields import get_desc_tx_type
 
 from java_wallet.models import Account, AccountBalance, Alias, Asset, At, AtState, Block, RewardRecipAssign, Trade, Transaction,IndirectIncoming, Subscription
+from scan.models import Pool
 
 
 @cache_memoize(3600)
@@ -294,6 +295,7 @@ def get_description_url(pool_id: int) -> str:
 def get_count_of_miners(pool_id: int) -> int:
     return (
         RewardRecipAssign.objects.using("java_wallet")
+        .filter(~Q(recip_id=F('account_id')))
         .filter(recip_id=pool_id)
         .filter(latest=1)
     ).count()
@@ -309,18 +311,10 @@ def get_timestamp_of_block(height: int) -> datetime:
 
 
 def get_forged_blocks_of_pool(pool_id):
-    miners = (
-        RewardRecipAssign.objects.using("java_wallet")
-        .filter(~Q(recip_id=F('account_id')))
-        .filter(height__lte=OuterRef("height"))
-        .filter(recip_id=pool_id)
-        .filter(latest=1)
-        .values_list("account_id", flat=True)
-    )
     return (
-        Block.objects.using("java_wallet")
-        .filter(generator_id__in=miners)
-        .annotate(block=F("height"))
+        Pool.objects
         .order_by("-block")
-        .values("generator_id", "block")
+        .filter(~Q(pool_id=F("generator_id")))
+        .filter(pool_id=pool_id)
+        .values("block", "generator_id")
     )

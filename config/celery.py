@@ -1,22 +1,30 @@
 import os
 
 from celery import Celery
-from kombu import Queue
 
-# set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-
 app = Celery("config")
-
-# Using a string here means the worker doesn't have to serialize
-# the configuration object to child processes.
-# - namespace='CELERY' means all celery-related configuration keys
-#   should have a `CELERY_` prefix.
 app.config_from_object("django.conf:settings", namespace="CELERY")
-
-# Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
 
-# https://docs.celeryproject.org/en/latest/userguide/routing.html
-app.conf.task_default_queue = "celery"
-app.conf.task_queues = (Queue("celery"),)
+
+@app.task(bind=True, ignore_result=True)
+def peer_cmd_task(self):
+    from scan.peers import peer_cmd
+    peer_cmd()
+
+
+app.conf.beat_schedule = {
+    "task_cmd": {
+        "task": "scan.tasks.task_cmd",
+        "schedule": 60.0
+    },
+    "peer_cmd_task": {
+        "task": "config.celery.peer_cmd_task",
+        "schedule": 300.0
+    },
+    "add_new_pools": {
+        "task": "scan.views.pools.add_new_pools",
+        "schedule": 120.0
+    },
+}

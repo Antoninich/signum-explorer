@@ -1,3 +1,5 @@
+from celery import shared_task
+from django.core.exceptions import EmptyResultSet
 from django.db.models import F, OuterRef, Q
 from django.views.generic import ListView
 
@@ -16,6 +18,7 @@ from scan.helpers.queries import (
     get_forged_blocks_of_pool,
     get_timestamp_of_block,
 )
+from scan.models import Pool
 from scan.views.base import IntSlugDetailView
 from scan.views.transactions import fill_data_transaction
 
@@ -23,15 +26,78 @@ from scan.views.transactions import fill_data_transaction
 def fill_data_pool(pool):
     pool["url"] = get_description_url(pool["pool_id"])
     pool["miners_cnt"] = get_count_of_miners(pool["pool_id"])
-    pool["block_timestamp"] = get_timestamp_of_block(pool["height"])
+    pool["block_timestamp"] = get_timestamp_of_block(pool["block"])
+
+
+@shared_task()
+def add_new_pools():
+    last_block_in_block = (
+        Block.objects.using("java_wallet")
+        .order_by("-height")
+        .values_list("height", flat=True)
+        .first()
+    )
+
+    last_block_in_pool = (
+        Pool.objects
+        .order_by("-block")
+        .values_list("block", flat=True)
+        .first()
+    )
+
+    blocks = (
+        Block.objects.using("java_wallet")
+        .annotate(
+            pool_id=RewardRecipAssign.objects.using("java_wallet")
+            .filter(height__lte=OuterRef("height"))
+            .filter(account_id=OuterRef("generator_id"))
+            .order_by("-height")
+            .values("recip_id")
+            [:1]
+        )
+        .annotate(block=F("height"))
+        .values("block", "pool_id", "generator_id")
+    )
+
+    if not last_block_in_pool:
+        last_block_in_pool = 0
+    diff_blocks = last_block_in_block - last_block_in_pool
+    chunk = 1000
+
+    if diff_blocks < 0:
+        return
+    elif diff_blocks > chunk:
+        diff_blocks = chunk
+
+    fields = (
+        blocks
+        .filter(block__gt=last_block_in_pool)
+        .filter(block__lte=last_block_in_pool+diff_blocks)
+    )
+    objs = []
+    for field in fields.iterator():
+        temp = Pool()
+        temp.block = field["block"]
+        temp.pool_id = field["pool_id"] if field["pool_id"] else field["generator_id"]
+        temp.generator_id = field["generator_id"]
+        objs.append(temp)
+    Pool.objects.bulk_create(objs)
 
 
 class PoolListView(ListView):
-    model = RewardRecipAssign
+    model = Pool
     queryset = (
-        RewardRecipAssign.objects.using("java_wallet")
-        .filter(~Q(recip_id=F('account_id')))
-        .values("recip_id", "account_id")
+        Pool.objects
+        .filter(~Q(pool_id=F("generator_id")))
+        .values("pool_id")
+        .distinct()
+        .annotate(
+            block=Pool.objects
+            .order_by("-block")
+            .filter(pool_id=OuterRef("pool_id"))
+            .values("block")
+            [:1]
+        )
     )
     template_name = "pools/list.html"
     context_object_name = "pools"
@@ -39,57 +105,11 @@ class PoolListView(ListView):
     paginate_by = 25
     ordering = "-block"
 
-    def get_queryset(self):
-        qs = self.queryset
-        query_block = (
-            Block.objects.using("java_wallet")
-            .values("generator_id", "height")
-        )
-        query_from_query_block = (
-            query_block
-            .annotate(
-                pool_id=qs
-                .filter(height__lte=OuterRef("height"))
-                .filter(account_id=OuterRef("generator_id"))
-                .order_by("-height")
-                .values("recip_id")
-                [:1]
-            )
-            .order_by("-height")
-            .values("pool_id", "height")
-            .exclude(height__isnull=True)
-            .exclude(pool_id__isnull=True)
-        )
-        query_from_queryset = (
-            qs
-            .annotate(
-                block=query_block
-                .filter(generator_id=OuterRef("account_id"))
-                .order_by("-height")
-                .values("height")
-                [:1]
-            )
-            .order_by("-block")
-            .values("recip_id", "block")
-            .exclude(block__isnull=True)
-            .exclude(recip_id__isnull=True)
-            .filter(latest=1)
-        )
-
-        pool_s_last_forged_blocks = []
-        pools_list = []
-        for query in query_from_queryset:
-            if query["recip_id"] not in pools_list:
-                pool_s_last_forged_blocks.append(query["block"])
-                pools_list.append(query["recip_id"])
-
-        return (
-            query_from_query_block
-            .filter(height__in=pool_s_last_forged_blocks)
-        )
-
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        try:
+            context = super().get_context_data(**kwargs)
+        except EmptyResultSet:
+            return
         obj = context[self.context_object_name]
 
         for pool in obj:

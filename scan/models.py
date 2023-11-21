@@ -1,5 +1,4 @@
 from django.db.models import (
-    BigAutoField,
     CharField,
     DateTimeField,
     FloatField,
@@ -51,3 +50,14 @@ class PeerMonitor(Model):
 
     reward_state = CharField(max_length=255, blank=True, null=True, default='none')
     reward_time = DateTimeField(blank=True, null=True)
+
+
+class Pool(Model):
+    block = IntegerField(primary_key=True)
+    generator_id = PositiveBigIntegerField()
+    pool_id = PositiveBigIntegerField()
+
+    class Meta:
+        managed = True
+        db_table = 'pool'
+        unique_together = (('generator_id', 'block'),)
