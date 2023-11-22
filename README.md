@@ -180,7 +180,7 @@ Download missing static files:
 ```text
 wget https://use.fontawesome.com/releases/v6.4.2/fontawesome-free-6.4.2-web.zip -P /tmp/
 unzip /tmp/fontawesome-free-6.4.2-web.zip
-mv fontawesome-free-6.4.2-web static/fontawesome-free-6.2.1-web
+mv fontawesome-free-6.4.2-web static/fontawesome
 ```
 
 ### Install Gunicorn for web access and Celery for running periodic tasks
