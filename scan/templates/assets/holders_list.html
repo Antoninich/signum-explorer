@@ -28,7 +28,7 @@
         <td>
           {% if asset.account_id == 0 %}
             Burnt
-          {% elif asset|is_asset_treasury:asset.account_id %}
+          {% elif asset.account_id in assets_holders_treasures%}
             Treasury
           {% else %}
             {% with circulating=asset.asset_id|asset_circulating %}

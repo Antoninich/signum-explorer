@@ -169,7 +169,7 @@ def tx_message_token(tx: Transaction) -> str:
 
 @register.filter
 def tx_type(tx: Transaction) -> str:
-    return get_desc_tx_type(tx.type, tx.subtype)
+    return get_desc_tx_type(tx["type"], tx["subtype"])
 
 @register.filter
 def tx_is_in(tx: Transaction, account_id = None) -> bool:
@@ -265,18 +265,18 @@ def tx_amount(tx: Transaction, filtered_account = None) -> float:
     return burst_amount(tx.amount)
 
 @register.filter
-def tx_quantity(tx: Transaction, filtered_account = None) -> float:
+def tx_quantity(tx: Transaction, filtered_account=None) -> float:
     account_id = filtered_account
-    offset = asset_offset(tx.height)
+    offset = asset_offset(tx["height"])
     if account_id and type(account_id) is str:
         account_id = int(account_id)
-    if account_id and tx.sender_id==account_id and tx.subtype == TxSubtypeColoredCoins.DISTRIBUTE_TO_HOLDERS:
-        asset_id = int.from_bytes(tx.attachment_bytes[offset+16:offset+24], byteorder=sys.byteorder)
+    if account_id and tx["sender_id"] == account_id and tx["subtype"] == TxSubtypeColoredCoins.DISTRIBUTE_TO_HOLDERS:
+        asset_id = int.from_bytes(tx["attachment_bytes"][offset+16:offset+24], byteorder=sys.byteorder)
         name, decimals, total_quantity, mintable = get_asset_details(asset_id)
-        quantity = int.from_bytes(tx.attachment_bytes[offset+24:offset+32], byteorder=sys.byteorder)
+        quantity = int.from_bytes(tx["attachment_bytes"][offset+24:offset+32], byteorder=sys.byteorder)
         return div_decimals(quantity, decimals)
-    elif tx.subtype == TxSubtypeColoredCoins.DISTRIBUTE_TO_HOLDERS and account_id:
-        asset_id = int.from_bytes(tx.attachment_bytes[offset+16:offset+24], byteorder=sys.byteorder)
+    elif tx["subtype"] == TxSubtypeColoredCoins.DISTRIBUTE_TO_HOLDERS and account_id:
+        asset_id = int.from_bytes(tx["attachment_bytes"][offset+16:offset+24], byteorder=sys.byteorder)
         name, decimals, total_quantity, mintable = get_asset_details(asset_id)
         indirect = (IndirectIncoming.objects.using("java_wallet")
                 .filter(account_id=account_id, transaction_id=tx.id)
@@ -284,22 +284,22 @@ def tx_quantity(tx: Transaction, filtered_account = None) -> float:
         )
         if indirect and indirect.quantity:
             return div_decimals(indirect.quantity,decimals)
-    elif tx.subtype == TxSubtypeColoredCoins.DISTRIBUTE_TO_HOLDERS and not account_id:
+    elif tx["subtype"] == TxSubtypeColoredCoins.DISTRIBUTE_TO_HOLDERS and not account_id:
         # Only checking if a token gets distributed for the sender (no filter_account)
         # needs ony quantity
-        asset_id = int.from_bytes(tx.attachment_bytes[offset+16:offset+24], byteorder=sys.byteorder)
+        asset_id = int.from_bytes(tx["attachment_bytes"][offset+16:offset+24], byteorder=sys.byteorder)
         if not asset_id:
             return 0
         else:
-            quantity = int.from_bytes(tx.attachment_bytes[offset+24:offset+32], byteorder=sys.byteorder)
+            quantity = int.from_bytes(tx["attachment_bytes"][offset+24:offset+32], byteorder=sys.byteorder)
             return div_decimals(quantity,decimals)
-    elif tx.attachment_bytes and tx.type == TxType.COLORED_COINS:
-        asset_id = int.from_bytes(tx.attachment_bytes[offset:offset+8], byteorder=sys.byteorder)
+    elif tx["attachment_bytes"] and tx["type"] == TxType.COLORED_COINS:
+        asset_id = int.from_bytes(tx["attachment_bytes"][offset:offset+8], byteorder=sys.byteorder)
         try:
             name, decimals, total_quantity, mintable = get_asset_details(asset_id)
         except:
             decimals = 1
-        quantity = int.from_bytes(tx.attachment_bytes[offset+8:offset+16], byteorder=sys.byteorder)
+        quantity = int.from_bytes(tx["attachment_bytes"][offset+8:offset+16], byteorder=sys.byteorder)
         return div_decimals(quantity, decimals)
     else:
         return 0.0
@@ -373,17 +373,17 @@ def tx_assetid_multi(tx: Transaction,asset_number = 1) -> str:
 
 @register.filter
 def tx_symbol_distribution(tx: Transaction) -> str:
-    if tx.type == TxType.COLORED_COINS and tx.attachment_bytes:
-        offset = asset_offset(tx.height)
-        if tx.subtype  == TxSubtypeColoredCoins.DISTRIBUTE_TO_HOLDERS:
-            asset_id = int.from_bytes(tx.attachment_bytes[offset+16:offset+24], byteorder=sys.byteorder)
+    if tx["type"] == TxType.COLORED_COINS and tx["attachment_bytes"]:
+        offset = asset_offset(tx["height"])
+        if tx["subtype"]  == TxSubtypeColoredCoins.DISTRIBUTE_TO_HOLDERS:
+            asset_id = int.from_bytes(tx["attachment_bytes"][offset+16:offset+24], byteorder=sys.byteorder)
             name, decimals, total_quantity, mintable = get_asset_details(asset_id)
             check_name = name.upper()
             if check_name in BLOCKED_ASSETS or check_name in PHISHING_ASSETS:
                 return str(asset_id)[0:10]
             return name
-        elif tx.subtype == TxSubtypeColoredCoins.ASSET_MINT:
-            asset_id = int.from_bytes(tx.attachment_bytes[offset+16:offset+24], byteorder=sys.byteorder)
+        elif tx["subtype"] == TxSubtypeColoredCoins.ASSET_MINT:
+            asset_id = int.from_bytes(tx["attachment_bytes"][offset+16:offset+24], byteorder=sys.byteorder)
             name, decimals, total_quantity, mintable = get_asset_details(asset_id)
             check_name = name.upper()
             if check_name in BLOCKED_ASSETS or check_name in PHISHING_ASSETS:
@@ -393,10 +393,10 @@ def tx_symbol_distribution(tx: Transaction) -> str:
 
 @register.filter
 def tx_asset_holder(tx: Transaction) -> str:
-    if tx.type == TxType.COLORED_COINS and tx.attachment_bytes:
-        offset = asset_offset(tx.height)
-        if tx.subtype  == TxSubtypeColoredCoins.DISTRIBUTE_TO_HOLDERS:
-            asset_id = int.from_bytes(tx.attachment_bytes[offset:offset+8], byteorder=sys.byteorder)
+    if tx["type"] == TxType.COLORED_COINS and tx["attachment_bytes"]:
+        offset = asset_offset(tx["height"])
+        if tx["subtype"]  == TxSubtypeColoredCoins.DISTRIBUTE_TO_HOLDERS:
+            asset_id = int.from_bytes(tx["attachment_bytes"][offset:offset+8], byteorder=sys.byteorder)
             name, decimals, total_quantity, mintable = get_asset_details(asset_id)
             check_name = name.upper()
             if check_name in BLOCKED_ASSETS or check_name in PHISHING_ASSETS:
@@ -452,11 +452,11 @@ def asset_price(asset_id : int) -> float:
 
 @register.filter
 def is_asset_blocked(asset) -> bool:
-    return asset.name.upper() in BLOCKED_ASSETS
+    return asset["name"].upper() in BLOCKED_ASSETS
 
 @register.filter
 def is_asset_phishing(asset) -> bool:
-    return asset.name.upper() in PHISHING_ASSETS or asset.name.upper() in BLOCKED_ASSETS
+    return asset["name"].upper() in PHISHING_ASSETS or asset["name"].upper() in BLOCKED_ASSETS
 
 @register.filter
 def is_asset_treasury(asset, account_id) -> bool:
@@ -634,9 +634,9 @@ def smooth_timedelta(timedelta_obj):
     return time_str
 
 @register.simple_tag()
-def multiply(qty, unit_price,decimals, direction, *args, **kwargs):
+def multiply(qty, unit_price, decimals, direction, *args, **kwargs):
     if isinstance(qty, str):
-        qty = qty.replace(',','')
+        qty = qty.replace(',', '')
     if isinstance(unit_price, str):
-        unit_price= unit_price.replace(',','')
-    return round(float(qty) * float(unit_price) * float(direction),decimals)
+        unit_price = unit_price.replace(',', '')
+    return round(float(qty) * float(unit_price) * float(direction), decimals)
