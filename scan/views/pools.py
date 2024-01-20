@@ -10,6 +10,7 @@ from java_wallet.models import (
     RewardRecipAssign,
     Transaction,
 )
+from scan.helpers.decorators import lock_decorator
 from scan.helpers.queries import (
     get_account_name,
     get_count_of_miners,
@@ -28,7 +29,9 @@ def fill_data_pool(pool):
     pool["block_timestamp"] = get_timestamp_of_block(pool["block"])
 
 
-@shared_task()
+
+@lock_decorator
+@shared_task
 def add_new_pools():
     last_block_in_block = (
         Block.objects.using("java_wallet")
@@ -61,7 +64,7 @@ def add_new_pools():
     if not last_block_in_pool:
         last_block_in_pool = 0
     diff_blocks = last_block_in_block - last_block_in_pool
-    chunk = 1000
+    chunk = 30000
 
     if diff_blocks < 0:
         return

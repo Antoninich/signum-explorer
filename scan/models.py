@@ -6,6 +6,7 @@ from django.db.models import (
     Model,
     PositiveIntegerField,
     PositiveSmallIntegerField,
+    Index,
 )
 from django.utils.translation import gettext as _
 
@@ -60,4 +61,6 @@ class Pool(Model):
     class Meta:
         managed = True
         db_table = 'pool'
-        unique_together = (('generator_id', 'block'),)
+        indexes = [
+            Index(fields=['pool_id', '-block',]),
+        ]

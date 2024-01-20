@@ -7,6 +7,7 @@ from distutils.version import LooseVersion
 from functools import lru_cache
 from urllib.parse import urlparse
 from time import sleep
+from celery import shared_task
 
 import requests
 from cache_memoize import cache_memoize
@@ -232,6 +233,7 @@ def get_count_nodes_online() -> int:
 
 
 # @lock_decorator(key="peer_monitor", auto_renewal=True) #locking up peers for some reason
+@shared_task
 @transaction.atomic
 def peer_cmd():
     logger.info("Start the scan")
@@ -240,8 +242,8 @@ def peer_cmd():
     logger.info(f"Checking for height: {local_difficulty['height']}, id: {local_difficulty['id']}, prev id: {local_difficulty['previous_block_id']}")
 
     addresses = get_nodes_list()
-    #logger.info("The list of peers:") #enable to troubleshoot peers list
-    #logger.info(addresses)            #enable to troubleshoot peers list
+    logger.info("The list of peers:") #enable to troubleshoot peers list
+    logger.info(addresses)            #enable to troubleshoot peers list
     # explore every peer and collect updates
     updates = {}
     if settings.TEST_NET:
